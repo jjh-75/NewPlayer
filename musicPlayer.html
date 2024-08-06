@@ -12,7 +12,7 @@
     :root{
       --color-red:#ae1100;       --body-bg:#969aa5;        --play-bg:#ebecf0;
       --color-light:#ffffff;     --color-shadow:#babecc;   --text-color:#616e7f;
-      --bar-bg:#aec9f8;          --text-size:30px;
+      --bar-bg:#aec9f8;          --text-size:24px;
     }
     body{
       height:100vh; background:var(--body-bg); 
@@ -84,8 +84,33 @@
       letter-spacing:-1px;  /* line-height:1.8 */ padding:5px 0;
       display:flex;  justify-content:space-between;  align-items:flex-end;
     }
+    
     .play_list li>strong{ font-weight:normal;  }
     .play_list li>em{  font-style:normal;  font-size:12px;  }
+
+
+
+    .play_list li.active{ color: #f8b6b6;  }
+    .volume{   position:relative;  text-align:right;  }
+    .volume #volume-btn{ cursor: pointer; }
+    .volume #volume-btn.open{ color: rgba(255,255,255,1); }
+    .volume #volume-ctrl{
+      width: 30px; height: 135px;  background: rgba(90, 40, 6, 0.6);  border-radius: 7px;  position: absolute; right:0px; bottom:28px;
+    }
+    .volume #volume-ctrl.hidden{ display: none; }
+    .volume .volumebg{
+      width: 6px; height: 90%;  border-radius: 3px;      background: rgba(255,255,255,0.4);      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%,-50%);      overflow: hidden;
+    }
+    .volume .volumerange{
+      -webkit-appearance: none;      width: 121px;      position: absolute; right: 1px; top: -4px;      background: transparent;      transform-origin: center right;
+      transform: rotate(270deg);      overflow: hidden; cursor: pointer;  z-index:10000;
+    }
+    .volume .volumerange:focus{ outline: none; }
+    .volume .volumerange::-webkit-slider-runnable-track{      width: 100%; height: 100%;      cursor: pointer;      border-radius: 3px;    }
+    .volume .volumerange::-webkit-slider-thumb{     
+      -webkit-appearance: none;      width: 6px; height: 6px;      border-radius: 50%;      background: #fff;      box-shadow: -100vw 0 0 100vw #9eb2db;
+    }
   </style>
 </head>
 <body>
@@ -97,7 +122,12 @@
       <img src="images/album1.jpg" alt="Alone -- Color Out">
     </div>
     <div class="volume">
-      <span class="volumeBar"></span>
+      <span id="volume-btn" class="material-icons">volume_up</span><!--volume_down, volume_up, volume_off-->
+      <div id="volume-ctrl" class="hidden">
+        <div class="volumebg">
+          <input type='range' min='0' max='100' value='50' step='1' class="volumerange"/>
+        </div>
+      </div>
     </div>
     <div class="info">
       <p class="name">Alone</p>
@@ -173,6 +203,7 @@
     }
     playBtn.addEventListener('click', ()=>{
       if(playBtn.innerText=='play_arrow'){
+        listClassActive();
         musicPlay();
       }else{
         musicPause();
@@ -239,6 +270,7 @@
     const fragment = document.createDocumentFragment();
     for(let i=0; i<musicList.length; i++){
       let li = document.createElement('li');
+      li.setAttribute('data-index', i);
       li.innerHTML=`<strong>${musicList[i].name}</strong> <em>${musicList[i].artist}</em>`;
       fragment.appendChild(li);
     }
@@ -247,6 +279,60 @@
     listBtn.addEventListener('click',()=>{
       listBox.classList.toggle('active');
     });
+
+
+    
+
+
+
+
+
+
+
+
+    const musicListName = listBox.querySelectorAll('li');
+
+    const listClassActive = () => {
+      musicListName.forEach((list)=>{
+        if(list.getAttribute('data-index')==list_index){
+          list.classList.add('active');
+        }else{
+          list.classList.remove('active');
+        }
+      });
+    }
+    musicListName.forEach((list)=>{
+      list.addEventListener('click',(e)=>{
+        console.log( e.currentTarget.dataset.index );
+        list_index = e.currentTarget.dataset.index;
+        listClassActive();
+        loadMusic(list_index);
+        musicPlay();
+      });
+    });
+
+
+    const volumeBtn=musicApp.querySelector('#volume-btn');
+    const volumeCtrl=musicApp.querySelector('#volume-ctrl');
+    const volumeRange=musicApp.querySelector('.volumerange');
+    musicAudio.volume=0.5;
+    volumeBtn.addEventListener('click',(e)=>{
+      e.target.classList.toggle('open');
+      volumeCtrl.classList.toggle('hidden');
+    });
+    volumeRange.addEventListener('change',()=>{
+      let oriVol=musicAudio.volume;
+      musicAudio.volume=volumeRange.value/100;
+      let currVol=musicAudio.volume;
+      if(currVol==0){
+        volumeBtn.innerHTML='volume_off';
+      } else if(oriVol<=currVol){
+        volumeBtn.innerHTML='volume_up';
+      } else{
+        volumeBtn.innerHTML='volume_down';
+      }
+    });
+
   </script>
 </body>
 </html>
